@@ -120,13 +120,12 @@ fn main() {
         .add_systems(Update, draw_gizmos)
         .add_systems(Update, rotate_cube)
         .add_systems(Update, hide_shadows)
-        .add_systems(Update, widgets::handle_ui_interactions::<Selection>)
-        .add_systems(Update, widgets::handle_ui_interactions::<Visibility>)
         .add_systems(
             Update,
-            (handle_selection_change, update_radio_buttons)
-                .after(widgets::handle_ui_interactions::<Selection>)
-                .after(widgets::handle_ui_interactions::<Visibility>),
+            (
+                handle_selection_change,
+                update_radio_buttons.run_if(resource_changed::<AppStatus>)
+            ).chain(),
         )
         .add_systems(Update, toggle_visibility)
         .add_systems(Update, update_directional_light)
@@ -136,6 +135,8 @@ fn main() {
         .add_systems(Update, switch_drag_mode)
         .add_systems(Update, update_help_text)
         .add_systems(Update, update_button_visibility)
+        .add_observer(widgets::handle_ui_button_interaction_on_click::<Selection>)
+        .add_observer(widgets::handle_ui_button_interaction_on_click::<Visibility>)
         .run();
 }
 

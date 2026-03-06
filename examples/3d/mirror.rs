@@ -125,11 +125,12 @@ fn main() {
         .add_systems(Startup, setup)
         .add_systems(Update, handle_window_resize_messages)
         .add_systems(Update, (move_camera_on_mouse_down, move_fox_on_mouse_down))
-        .add_systems(Update, widgets::handle_ui_interactions::<DragAction>)
         .add_systems(
             Update,
-            (handle_mouse_action_change, update_radio_buttons)
-                .after(widgets::handle_ui_interactions::<DragAction>),
+            (
+                handle_mouse_action_change,
+                update_radio_buttons.run_if(resource_changed::<AppStatus>)
+            ).chain(),
         )
         .add_systems(
             Update,
@@ -137,6 +138,7 @@ fn main() {
         )
         .add_systems(Update, play_fox_animation)
         .add_systems(Update, update_help_text)
+        .add_observer(widgets::handle_ui_button_interaction_on_click::<DragAction>)
         .run();
 }
 
