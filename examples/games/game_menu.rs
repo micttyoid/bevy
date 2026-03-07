@@ -4,6 +4,9 @@
 
 use bevy::prelude::*;
 
+#[path = "../helpers/legacy.rs"]
+mod legacy;
+
 const TEXT_COLOR: Color = Color::srgb(0.9, 0.9, 0.9);
 
 // Enum that will be used as a global state for the game
@@ -232,7 +235,10 @@ mod menu {
         prelude::*,
     };
 
-    use super::{DisplayQuality, GameState, Setting, Volume, TEXT_COLOR};
+    use super::{
+        legacy::{handle_button_interaction, LegacyInteraction as Interaction},
+        DisplayQuality, GameState, Setting, Volume, TEXT_COLOR,
+    };
 
     // This plugin manages the menu, with 5 different screens:
     // - a main menu with "New Game", "Settings", "Quit"
@@ -268,7 +274,8 @@ mod menu {
             .add_systems(
                 Update,
                 (menu_action, button_system).run_if(in_state(GameState::Menu)),
-            );
+            )
+            .add_systems(Update, handle_button_interaction);
     }
 
     // State used for the current menu screen
@@ -327,7 +334,7 @@ mod menu {
         >,
     ) {
         for (interaction, mut background_color, selected) in &mut interaction_query {
-            *background_color = match (*interaction, selected) {
+            *background_color = match (interaction, selected) {
                 (Interaction::Pressed, _) | (Interaction::None, Some(_)) => PRESSED_BUTTON.into(),
                 (Interaction::Hovered, Some(_)) => HOVERED_PRESSED_BUTTON.into(),
                 (Interaction::Hovered, None) => HOVERED_BUTTON.into(),
@@ -425,7 +432,7 @@ mod menu {
                     // - settings
                     // - quit
                     (
-                        Button,
+                        Interaction::default(),
                         button_node.clone(),
                         BackgroundColor(NORMAL_BUTTON),
                         MenuButtonAction::Play,
@@ -439,7 +446,7 @@ mod menu {
                         ]
                     ),
                     (
-                        Button,
+                        Interaction::default(),
                         button_node.clone(),
                         BackgroundColor(NORMAL_BUTTON),
                         MenuButtonAction::Settings,
@@ -453,7 +460,7 @@ mod menu {
                         ]
                     ),
                     (
-                        Button,
+                        Interaction::default(),
                         button_node,
                         BackgroundColor(NORMAL_BUTTON),
                         MenuButtonAction::Quit,
@@ -511,7 +518,7 @@ mod menu {
                     .into_iter()
                     .map(move |(action, text)| {
                         (
-                            Button,
+                            Interaction::default(),
                             button_node.clone(),
                             BackgroundColor(NORMAL_BUTTON),
                             action,
@@ -581,7 +588,7 @@ mod menu {
                                     DisplayQuality::High,
                                 ] {
                                     let mut entity = parent.spawn((
-                                        Button,
+                                        Interaction::default(),
                                         Node {
                                             width: px(150),
                                             height: px(65),
@@ -603,7 +610,7 @@ mod menu {
                     ),
                     // Display the back button to return to the settings screen
                     (
-                        Button,
+                        Interaction::default(),
                         button_node(),
                         BackgroundColor(NORMAL_BUTTON),
                         MenuButtonAction::BackToSettings,
@@ -662,7 +669,7 @@ mod menu {
                             SpawnWith(move |parent: &mut ChildSpawner| {
                                 for volume_setting in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] {
                                     let mut entity = parent.spawn((
-                                        Button,
+                                        Interaction::default(),
                                         Node {
                                             width: px(30),
                                             height: px(65),
@@ -679,7 +686,7 @@ mod menu {
                         ))
                     ),
                     (
-                        Button,
+                        Interaction::default(),
                         button_node,
                         BackgroundColor(NORMAL_BUTTON),
                         MenuButtonAction::BackToSettings,
