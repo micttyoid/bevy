@@ -129,8 +129,9 @@ fn main() {
             Update,
             (
                 handle_mouse_action_change,
-                update_radio_buttons.run_if(resource_changed::<AppStatus>)
-            ).chain(),
+                update_radio_buttons.run_if(resource_changed::<AppStatus>),
+            )
+                .chain(),
         )
         .add_systems(
             Update,

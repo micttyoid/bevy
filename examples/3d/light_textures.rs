@@ -125,8 +125,9 @@ fn main() {
             Update,
             (
                 handle_selection_change,
-                update_radio_buttons.run_if(resource_changed::<AppStatus>)
-            ).chain(),
+                update_radio_buttons.run_if(resource_changed::<AppStatus>),
+            )
+                .chain(),
         )
         .add_systems(Update, toggle_visibility)
         .add_systems(Update, update_directional_light)

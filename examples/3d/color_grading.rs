@@ -104,11 +104,7 @@ fn main() {
         .add_systems(Startup, setup)
         .add_systems(
             Update,
-            (
-                adjust_color_grading_option,
-                update_ui_state,
-            )
-                .chain(),
+            (adjust_color_grading_option, update_ui_state).chain(),
         )
         .add_observer(handle_button_presses)
         .run();

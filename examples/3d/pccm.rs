@@ -69,8 +69,9 @@ fn main() {
             Update,
             (
                 handle_pccm_enable_change,
-                update_radio_buttons.run_if(resource_changed::<AppStatus>)
-            ).chain()
+                update_radio_buttons.run_if(resource_changed::<AppStatus>),
+            )
+                .chain(),
         )
         .add_observer(widgets::handle_ui_button_interaction_on_click::<PccmEnableStatus>)
         .run();

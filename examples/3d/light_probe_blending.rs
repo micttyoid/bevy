@@ -168,12 +168,12 @@ fn main() {
             (
                 handle_gizmos_enabled_change,
                 handle_object_to_show_change,
-                handle_camera_mode_change.after(free_camera::run_freecamera_controller)
-            )
+                handle_camera_mode_change.after(free_camera::run_freecamera_controller),
+            ),
         )
         .add_systems(
             Update,
-            update_radio_buttons.run_if(resource_changed::<AppStatus>)
+            update_radio_buttons.run_if(resource_changed::<AppStatus>),
         )
         .add_systems(Update, draw_gizmos)
         .add_observer(widgets::handle_ui_button_interaction_on_click::<GizmosEnabled>)

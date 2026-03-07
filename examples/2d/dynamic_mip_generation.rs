@@ -233,8 +233,7 @@ fn main() {
     )
     .add_systems(
         Update,
-        handle_app_setting_change
-            .before(regenerate_image_when_requested),
+        handle_app_setting_change.before(regenerate_image_when_requested),
     )
     .add_observer(widgets::handle_ui_button_interaction_on_click::<AppSetting>);
 
