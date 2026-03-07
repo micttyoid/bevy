@@ -1,13 +1,17 @@
 //! Demonstrates how the to use the size constraints to control the size of a UI node.
 
 use bevy::{color::palettes::css::*, prelude::*};
+use legacy::{handle_button_interaction, LegacyInteraction as Interaction};
+
+#[path = "../../helpers/legacy.rs"]
+mod legacy;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_message::<ButtonActivated>()
         .add_systems(Startup, setup)
-        .add_systems(Update, (update_buttons, update_radio_buttons_colors))
+        .add_systems(Update, (handle_button_interaction, update_buttons, update_radio_buttons_colors))
         .run();
 }
 
@@ -213,7 +217,7 @@ fn spawn_button(
 ) {
     parent
         .spawn((
-            Button,
+            Interaction::default(),
             Node {
                 align_items: AlignItems::Center,
                 justify_content: JustifyContent::Center,
