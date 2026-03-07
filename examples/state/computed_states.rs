@@ -17,8 +17,11 @@
 //! states to display the 2 tutorial texts.
 
 use bevy::{dev_tools::states::*, input::keyboard::Key, prelude::*};
-
 use ui::*;
+use legacy::{handle_button_interaction, LegacyInteraction as Interaction};
+
+#[path = "../helpers/legacy.rs"]
+mod legacy;
 
 // To begin, we want to define our state objects.
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
@@ -179,7 +182,7 @@ fn main() {
         // using our states as normal.
         .add_systems(Startup, setup)
         .add_systems(OnEnter(AppState::Menu), setup_menu)
-        .add_systems(Update, menu.run_if(in_state(AppState::Menu)))
+        .add_systems(Update, (handle_button_interaction, menu.run_if(in_state(AppState::Menu))))
         .add_systems(OnExit(AppState::Menu), cleanup_menu)
         // We only want to run the [`setup_game`] function when we enter the [`AppState::InGame`] state, regardless
         // of whether the game is paused or not.
@@ -343,7 +346,7 @@ mod ui {
                 },
                 children![
                     (
-                        Button,
+                        Interaction::default(),
                         Node {
                             width: px(200),
                             height: px(65),
@@ -365,7 +368,7 @@ mod ui {
                         )],
                     ),
                     (
-                        Button,
+                        Interaction::default(),
                         Node {
                             width: px(200),
                             height: px(65),
