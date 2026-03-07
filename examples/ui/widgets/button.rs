@@ -2,6 +2,10 @@
 //! interaction state.
 
 use bevy::{color::palettes::basic::*, input_focus::InputFocus, prelude::*};
+use legacy::{handle_button_interaction, LegacyInteraction as Interaction};
+
+#[path = "../../helpers/legacy.rs"]
+mod legacy;
 
 fn main() {
     App::new()
@@ -9,7 +13,7 @@ fn main() {
         // `InputFocus` must be set for accessibility to recognize the button.
         .init_resource::<InputFocus>()
         .add_systems(Startup, setup)
-        .add_systems(Update, button_system)
+        .add_systems(Update, (button_system, handle_button_interaction))
         .run();
 }
 
@@ -80,7 +84,7 @@ fn button(asset_server: &AssetServer) -> impl Bundle {
             ..default()
         },
         children![(
-            Button,
+            Interaction::default(),
             Node {
                 width: px(150),
                 height: px(65),

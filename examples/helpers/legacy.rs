@@ -12,23 +12,20 @@ use bevy::prelude::*;
 use std::collections::HashMap;
 
 /// Pointer observer and (upcoming) ui_widgets are the recommended alternatives.
+/// # What's not working
+/// Persisting press on click, enter, or over
+/// # How to get there
+/// Local focus(Local<Option<Entity>>) + more readers with bubbling
 pub fn handle_button_interaction(
-    mut click_reader: MessageReader<Pointer<Click>>,
-    mut over_reader: MessageReader<Pointer<Over>>,
-    mut out_reader: MessageReader<Pointer<Out>>,
     mut leave_reader: MessageReader<Pointer<Leave>>,
+    mut out_reader: MessageReader<Pointer<Out>>,
+    mut over_reader: MessageReader<Pointer<Over>>,
+    mut press_reader: MessageReader<Pointer<Press>>,
+    mut release_reader: MessageReader<Pointer<Release>>,
     mut button_interaction_query: Query<(Entity, &mut LegacyInteraction)>,
     children: Query<&Children>,
 ) {
     let mut buttons: HashMap<Entity, LegacyInteraction> = HashMap::new();
-
-    for over in over_reader.read() {
-        buttons.insert(over.event_target(), LegacyInteraction::Hovered);
-    }
-
-    for click in click_reader.read() {
-        buttons.insert(click.event_target(), LegacyInteraction::Pressed);
-    }
 
     for out in out_reader.read() {
         buttons.insert(out.event_target(), LegacyInteraction::None);
@@ -36,6 +33,18 @@ pub fn handle_button_interaction(
 
     for leave in leave_reader.read() {
         buttons.insert(leave.event_target(), LegacyInteraction::None);
+    }
+
+    for over in over_reader.read() {
+        buttons.insert(over.event_target(), LegacyInteraction::Hovered);
+    }
+
+    for press in press_reader.read() {
+        buttons.insert(press.event_target(), LegacyInteraction::Pressed);
+    }
+
+    for release in release_reader.read() {
+        buttons.insert(release.event_target(), LegacyInteraction::Hovered);
     }
 
     // Propagate(bubble) non-trivial interaction(non None) to a button ancestor if exists
