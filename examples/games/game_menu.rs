@@ -2,10 +2,11 @@
 //! change some settings or quit. There is no actual game, it will just display the current
 //! settings for 5 seconds before going back to the menu.
 
-use bevy::prelude::*;
-
-#[path = "../helpers/legacy.rs"]
-mod legacy;
+use bevy::{
+    input_focus::InputDispatchPlugin,
+    prelude::*,
+    ui_widgets::UiWidgetsPlugins,
+};
 
 const TEXT_COLOR: Color = Color::srgb(0.9, 0.9, 0.9);
 
@@ -35,7 +36,7 @@ struct Volume(u32);
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins)
+        .add_plugins((DefaultPlugins, UiWidgetsPlugins, InputDispatchPlugin))
         // Insert as resource the initial value for the settings resources
         .insert_resource(DisplayQuality::Medium)
         .insert_resource(Volume(7))
@@ -232,13 +233,15 @@ mod menu {
         app::AppExit,
         color::palettes::css::CRIMSON,
         ecs::spawn::{SpawnIter, SpawnWith},
+        picking::hover::Hovered,
         prelude::*,
+        reflect::Is,
+        ui::Pressed,
+        ui_widgets::Button,
     };
 
-    use super::{
-        legacy::{handle_button_interaction, LegacyInteraction as Interaction},
-        DisplayQuality, GameState, Setting, Volume, TEXT_COLOR,
-    };
+    use super::{DisplayQuality, GameState, Setting, Volume, TEXT_COLOR};
+
 
     // This plugin manages the menu, with 5 different screens:
     // - a main menu with "New Game", "Settings", "Quit"
@@ -271,11 +274,11 @@ mod menu {
                 setting_button::<Volume>.run_if(in_state(MenuState::SettingsSound)),
             )
             // Common systems to all screens that handles buttons behavior
-            .add_systems(
-                Update,
-                (menu_action, button_system).run_if(in_state(GameState::Menu)),
-            )
-            .add_systems(Update, handle_button_interaction);
+            .add_systems(Update, menu_action.run_if(in_state(GameState::Menu)))
+            .add_observer(button_on_interaction::<Add, SelectedOption>)
+            .add_observer(button_on_interaction::<Add, Pressed>)
+            .add_observer(button_on_interaction::<Insert, Hovered>)
+            .add_observer(button_on_interaction::<Insert, Hovered>);
     }
 
     // State used for the current menu screen
@@ -307,8 +310,12 @@ mod menu {
 
     const NORMAL_BUTTON: Color = Color::srgb(0.15, 0.15, 0.15);
     const HOVERED_BUTTON: Color = Color::srgb(0.25, 0.25, 0.25);
-    const HOVERED_PRESSED_BUTTON: Color = Color::srgb(0.25, 0.65, 0.25);
-    const PRESSED_BUTTON: Color = Color::srgb(0.35, 0.75, 0.35);
+    const PRESSED_BUTTON: Color = Color::srgb(0.25, 0.65, 0.25);
+    const SELECTED_BUTTON: Color = Color::srgb(0.35, 0.75, 0.35);
+
+    #[derive(Component)]
+    #[require(Button, Hovered)]
+    struct HoverableButton;
 
     // Tag component used to mark which setting is currently selected
     #[derive(Component)]
@@ -326,19 +333,18 @@ mod menu {
         Quit,
     }
 
-    // This system handles changing all buttons color based on mouse interaction
-    fn button_system(
-        mut interaction_query: Query<
-            (&Interaction, &mut BackgroundColor, Option<&SelectedOption>),
-            (Changed<Interaction>, With<Button>),
-        >,
+    // This observer handles changing all buttons color based on mouse interaction
+    fn button_on_interaction<E: EntityEvent, C: Component>(
+        event: On<E, C>,
+        mut button_query: Query<(&Hovered, Has<Pressed>, &mut BackgroundColor, Option<&SelectedOption>), With<Button>>,
     ) {
-        for (interaction, mut background_color, selected) in &mut interaction_query {
-            *background_color = match (interaction, selected) {
-                (Interaction::Pressed, _) | (Interaction::None, Some(_)) => PRESSED_BUTTON.into(),
-                (Interaction::Hovered, Some(_)) => HOVERED_PRESSED_BUTTON.into(),
-                (Interaction::Hovered, None) => HOVERED_BUTTON.into(),
-                (Interaction::None, None) => NORMAL_BUTTON.into(),
+        if let Ok((hovered, pressed, mut background_color, selected)) = button_query.get_mut(event.event_target()) {
+            let pressed = pressed && !(E::is::<Remove>() && C::is::<Pressed>());
+            *background_color = match (hovered.get(), pressed, selected) {
+                (_, _, Some(_)) => SELECTED_BUTTON.into(),
+                (true, _, _) => PRESSED_BUTTON.into(),
+                (false, true, _) => HOVERED_BUTTON.into(),
+                _ => NORMAL_BUTTON.into(),
             }
         }
     }
@@ -346,17 +352,16 @@ mod menu {
     // This system updates the settings when a new value for a setting is selected, and marks
     // the button as the one currently selected
     fn setting_button<T: Resource + Component + PartialEq + Copy>(
-        interaction_query: Query<
-            (&Interaction, &Setting<T>, Entity),
-            (Changed<Interaction>, With<Button>),
+        button_query: Query<
+            (Has<Pressed>, &Setting<T>, Entity), With<Button>,
         >,
         selected_query: Single<(Entity, &mut BackgroundColor), With<SelectedOption>>,
         mut commands: Commands,
         mut setting: ResMut<T>,
     ) {
         let (previous_button, mut previous_button_color) = selected_query.into_inner();
-        for (interaction, button_setting, entity) in &interaction_query {
-            if *interaction == Interaction::Pressed && *setting != button_setting.0 {
+        for (pressed, button_setting, entity) in &button_query {
+            if pressed && *setting != button_setting.0 {
                 *previous_button_color = NORMAL_BUTTON.into();
                 commands.entity(previous_button).remove::<SelectedOption>();
                 commands.entity(entity).insert(SelectedOption);
@@ -432,7 +437,7 @@ mod menu {
                     // - settings
                     // - quit
                     (
-                        Interaction::default(),
+                        HoverableButton,
                         button_node.clone(),
                         BackgroundColor(NORMAL_BUTTON),
                         MenuButtonAction::Play,
@@ -446,7 +451,7 @@ mod menu {
                         ]
                     ),
                     (
-                        Interaction::default(),
+                        HoverableButton,
                         button_node.clone(),
                         BackgroundColor(NORMAL_BUTTON),
                         MenuButtonAction::Settings,
@@ -460,7 +465,7 @@ mod menu {
                         ]
                     ),
                     (
-                        Interaction::default(),
+                        HoverableButton,
                         button_node,
                         BackgroundColor(NORMAL_BUTTON),
                         MenuButtonAction::Quit,
@@ -518,7 +523,7 @@ mod menu {
                     .into_iter()
                     .map(move |(action, text)| {
                         (
-                            Interaction::default(),
+                            HoverableButton,
                             button_node.clone(),
                             BackgroundColor(NORMAL_BUTTON),
                             action,
@@ -588,7 +593,7 @@ mod menu {
                                     DisplayQuality::High,
                                 ] {
                                     let mut entity = parent.spawn((
-                                        Interaction::default(),
+                                        HoverableButton,
                                         Node {
                                             width: px(150),
                                             height: px(65),
@@ -610,7 +615,7 @@ mod menu {
                     ),
                     // Display the back button to return to the settings screen
                     (
-                        Interaction::default(),
+                        HoverableButton,
                         button_node(),
                         BackgroundColor(NORMAL_BUTTON),
                         MenuButtonAction::BackToSettings,
@@ -669,7 +674,7 @@ mod menu {
                             SpawnWith(move |parent: &mut ChildSpawner| {
                                 for volume_setting in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] {
                                     let mut entity = parent.spawn((
-                                        Interaction::default(),
+                                        HoverableButton,
                                         Node {
                                             width: px(30),
                                             height: px(65),
@@ -686,7 +691,7 @@ mod menu {
                         ))
                     ),
                     (
-                        Interaction::default(),
+                        HoverableButton,
                         button_node,
                         BackgroundColor(NORMAL_BUTTON),
                         MenuButtonAction::BackToSettings,
@@ -698,16 +703,16 @@ mod menu {
     }
 
     fn menu_action(
-        interaction_query: Query<
-            (&Interaction, &MenuButtonAction),
-            (Changed<Interaction>, With<Button>),
+        pressed_query: Query<
+            (Has<Pressed>, &MenuButtonAction),
+            With<Button>,
         >,
         mut app_exit_writer: MessageWriter<AppExit>,
         mut menu_state: ResMut<NextState<MenuState>>,
         mut game_state: ResMut<NextState<GameState>>,
     ) {
-        for (interaction, menu_button_action) in &interaction_query {
-            if *interaction == Interaction::Pressed {
+        for (pressed, menu_button_action) in &pressed_query {
+            if pressed {
                 match menu_button_action {
                     MenuButtonAction::Quit => {
                         app_exit_writer.write(AppExit::Success);
