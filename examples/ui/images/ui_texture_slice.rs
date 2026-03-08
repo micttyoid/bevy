@@ -3,40 +3,43 @@
 
 use bevy::{
     color::palettes::css::{GOLD, ORANGE},
+    input_focus::InputDispatchPlugin,
+    picking::hover::Hovered,
     prelude::*,
-    ui::widget::NodeImageMode,
+    ui::{Pressed, widget::NodeImageMode,},
+    ui_widgets::{Button, UiWidgetsPlugins},
 };
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins)
+        .add_plugins((DefaultPlugins, UiWidgetsPlugins, InputDispatchPlugin))
         .add_systems(Startup, setup)
         .add_systems(Update, button_system)
         .run();
 }
 
 fn button_system(
-    mut interaction_query: Query<
-        (&Interaction, &Children, &mut ImageNode),
-        (Changed<Interaction>, With<Button>),
+    mut buttons: Query<
+        (Has<Pressed>, &Hovered, &Children, &mut ImageNode),
+        (Or<(Changed<Pressed>, Changed<Hovered>)>, With<Button>),
     >,
     mut text_query: Query<&mut Text>,
 ) {
-    for (interaction, children, mut image) in &mut interaction_query {
+    for (pressed, hovered, children, mut image) in &mut buttons {
         let mut text = text_query.get_mut(children[0]).unwrap();
-        match *interaction {
-            Interaction::Pressed => {
+        match (hovered.get(), pressed) {
+            (_, true) => {
                 **text = "Press".to_string();
                 image.color = GOLD.into();
-            }
-            Interaction::Hovered => {
+            },
+            (true, false) => {
                 **text = "Hover".to_string();
                 image.color = ORANGE.into();
-            }
-            Interaction::None => {
+            },
+            _ => {
                 **text = "Button".to_string();
                 image.color = Color::WHITE;
-            }
+            },
         }
     }
 }
@@ -65,6 +68,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                 parent
                     .spawn((
                         Button,
+                        Hovered::default(),
                         ImageNode {
                             image: image.clone(),
                             image_mode: NodeImageMode::Sliced(slicer.clone()),
