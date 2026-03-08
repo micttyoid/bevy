@@ -9,11 +9,16 @@ use bevy::{
     prelude::*,
 };
 
+use legacy::{handle_button_interaction, LegacyInteraction as Interaction};
+
+#[path = "../../helpers/legacy.rs"]
+mod legacy;
+
 fn main() {
     App::new()
         .add_plugins((DefaultPlugins, InputDispatchPlugin, TabNavigationPlugin))
         .add_systems(Startup, setup)
-        .add_systems(Update, (button_system, focus_system))
+        .add_systems(Update, (handle_button_interaction, button_system, focus_system))
         .run();
 }
 
@@ -115,7 +120,7 @@ fn setup(mut commands: Commands) {
                         for i in indices {
                             parent
                                 .spawn((
-                                    Button,
+                                    Interaction::default(),
                                     Node {
                                         width: px(200),
                                         height: px(65),
