@@ -6,7 +6,8 @@ use bevy::{
     input_focus::InputDispatchPlugin,
     picking::hover::Hovered,
     prelude::*,
-    ui::{Pressed, widget::NodeImageMode,},
+    reflect::Is,
+    ui::{widget::NodeImageMode, Pressed},
     ui_widgets::{Button, UiWidgetsPlugins},
 };
 
@@ -14,32 +15,34 @@ fn main() {
     App::new()
         .add_plugins((DefaultPlugins, UiWidgetsPlugins, InputDispatchPlugin))
         .add_systems(Startup, setup)
-        .add_systems(Update, button_system)
+        .add_observer(button_on_interaction::<Add, Pressed>)
+        .add_observer(button_on_interaction::<Remove, Pressed>)
+        .add_observer(button_on_interaction::<Insert, Hovered>)
         .run();
 }
 
-fn button_system(
-    mut buttons: Query<
-        (Has<Pressed>, &Hovered, &Children, &mut ImageNode),
-        (Or<(Changed<Pressed>, Changed<Hovered>)>, With<Button>),
-    >,
+fn button_on_interaction<E: EntityEvent, C: Component>(
+    event: On<E, C>,
+    mut buttons: Query<(&Hovered, Has<Pressed>, &Children, &mut ImageNode), With<Button>>,
     mut text_query: Query<&mut Text>,
 ) {
-    for (pressed, hovered, children, mut image) in &mut buttons {
+    if let Ok((hovered, pressed, children, mut image)) = buttons.get_mut(event.event_target()) {
         let mut text = text_query.get_mut(children[0]).unwrap();
-        match (hovered.get(), pressed) {
-            (_, true) => {
+        let hovered = hovered.get();
+        let pressed = pressed && !(E::is::<Remove>() && C::is::<Pressed>());
+        match (hovered, pressed) {
+            (true, true) => {
                 **text = "Press".to_string();
                 image.color = GOLD.into();
-            },
+            }
             (true, false) => {
                 **text = "Hover".to_string();
                 image.color = ORANGE.into();
-            },
-            _ => {
+            }
+            (false, _) => {
                 **text = "Button".to_string();
                 image.color = Color::WHITE;
-            },
+            }
         }
     }
 }
