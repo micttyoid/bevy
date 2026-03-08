@@ -7,16 +7,13 @@
 //! In this case, we're transitioning from a `Menu` state to an `InGame` state, at which point we create
 //! a substate called `IsPaused` to track whether the game is paused or not.
 
-use bevy::{dev_tools::states::*, prelude::*};
 use bevy::{
+    dev_tools::states::*,
     input_focus::InputDispatchPlugin,
     picking::hover::Hovered,
     prelude::*,
     ui::Pressed,
-    ui_widgets::{
-        UiWidgetsPlugins,
-        Button,
-    },
+    ui_widgets::{Button, UiWidgetsPlugins},
 };
 
 use ui::*;

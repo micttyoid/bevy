@@ -10,10 +10,7 @@ use bevy::{
     picking::hover::Hovered,
     prelude::*,
     ui::Pressed,
-    ui_widgets::{
-        UiWidgetsPlugins,
-        Button,
-    },
+    ui_widgets::{Button, UiWidgetsPlugins},
 };
 
 fn main() {
