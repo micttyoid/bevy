@@ -2,11 +2,7 @@
 //! change some settings or quit. There is no actual game, it will just display the current
 //! settings for 5 seconds before going back to the menu.
 
-use bevy::{
-    input_focus::InputDispatchPlugin,
-    prelude::*,
-    ui_widgets::UiWidgetsPlugins,
-};
+use bevy::{input_focus::InputDispatchPlugin, prelude::*, ui_widgets::UiWidgetsPlugins};
 
 const TEXT_COLOR: Color = Color::srgb(0.9, 0.9, 0.9);
 
@@ -352,9 +348,7 @@ mod menu {
     // This system updates the settings when a new value for a setting is selected, and marks
     // the button as the one currently selected
     fn setting_button<T: Resource + Component + PartialEq + Copy>(
-        button_query: Query<
-            (Has<Pressed>, &Setting<T>, Entity), With<Button>,
-        >,
+        button_query: Query<(Has<Pressed>, &Setting<T>, Entity), With<Button>>,
         selected_query: Single<(Entity, &mut BackgroundColor), With<SelectedOption>>,
         mut commands: Commands,
         mut setting: ResMut<T>,
@@ -703,10 +697,7 @@ mod menu {
     }
 
     fn menu_action(
-        pressed_query: Query<
-            (Has<Pressed>, &MenuButtonAction),
-            With<Button>,
-        >,
+        pressed_query: Query<(Has<Pressed>, &MenuButtonAction), With<Button>>,
         mut app_exit_writer: MessageWriter<AppExit>,
         mut menu_state: ResMut<NextState<MenuState>>,
         mut game_state: ResMut<NextState<GameState>>,
