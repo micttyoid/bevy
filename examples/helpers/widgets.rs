@@ -166,7 +166,10 @@ pub fn ui_text(label: &str, color: Color) -> impl Bundle + use<> {
 /// as necessary.
 pub fn handle_ui_button_interaction_on_click<T>(
     click: On<Pointer<Click>>,
-    mut widget_click_sender_query: Query<&WidgetClickSender<T>, With<Button>>,
+    mut widget_click_sender_query: Query<
+        &WidgetClickSender<T>,
+        Or<(With<Button>, With<bevy::ui_widgets::Button>)>,
+    >,
     mut widget_click_events: MessageWriter<WidgetClickEvent<T>>,
 ) where
     T: Clone + Send + Sync + 'static,
