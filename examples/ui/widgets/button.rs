@@ -3,7 +3,7 @@
 
 use bevy::{
     color::palettes::basic::*,
-    input_focus::{InputFocus, InputDispatchPlugin},
+    input_focus::{InputDispatchPlugin, InputFocus},
     picking::hover::Hovered,
     prelude::*,
     reflect::Is,
