@@ -14,7 +14,6 @@ fn main() {
     App::new()
         .add_plugins((DefaultPlugins, UiWidgetsPlugins, InputDispatchPlugin))
         .add_systems(Startup, setup)
-        //.add_systems(Update, update_outlines)
         .add_observer(update_outlines_on_interaction::<Add, Pressed>)
         .add_observer(update_outlines_on_interaction::<Remove, Pressed>)
         .add_observer(update_outlines_on_interaction::<Insert, Hovered>)

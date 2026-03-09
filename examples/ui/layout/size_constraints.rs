@@ -292,7 +292,7 @@ fn update_buttons(
                         bar_node.max_width = value.0;
                     }
                 }
-            },
+            }
             (true, false) => {
                 if let Ok(children) = children_query.get(button_id) {
                     for &child in children {
