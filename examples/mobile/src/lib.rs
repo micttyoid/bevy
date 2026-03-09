@@ -11,7 +11,7 @@ use bevy::{
     ui::Pressed,
     ui_widgets::{Button, UiWidgetsPlugins},
     window::{AppLifecycle, ScreenEdge, WindowMode},
-    winit::WinitSettings,    
+    winit::WinitSettings,
 };
 
 // the `bevy_main` proc_macro generates the required boilerplate for Android
