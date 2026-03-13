@@ -101,8 +101,6 @@ pub struct FeathersPlugins;
 impl PluginGroup for FeathersPlugins {
     fn build(self) -> PluginGroupBuilder {
         PluginGroupBuilder::start::<Self>()
-            .add_group(UiWidgetsPlugins)
-            .add(InputDispatchPlugin)
             .add(TabNavigationPlugin)
             .add(FeathersPlugin)
     }
